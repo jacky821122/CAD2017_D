@@ -114,7 +114,8 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 		}
 		if(word == "module")
 		{
-			line = "module fsm(clk, rst, in, PPI, z);";
+
+			line = "module fsm(clk, rst, in);";
 			declarations.append(line);
 			declarations.append("\n");
 		}

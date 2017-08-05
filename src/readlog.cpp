@@ -16,12 +16,18 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	getline(blifFile, line);
 	getline(blifFile, line);
 	istringstream token1(line);
-	vector<bool> careBits;
+	vector<int> careBits;
+	int PPIs = 0;
 	while(token1 >> word)
 	{
 		if(word == ".inputs") continue;
-		if(word.find("in[") == string::npos) careBits.push_back(false);
-		else careBits.push_back(true);
+		if(word.find("in[") != string::npos) careBits.push_back(1);
+		else if(word.find("PPI") != string::npos)
+		{
+			PPIs++;
+			careBits.push_back(2);
+		}
+		else careBits.push_back(0);
 	}
 
 	ifstream logFile(clogFile);
@@ -37,13 +43,14 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	token >> word;
 	ss << word;
 	ss >> iFrame;
+	iFrame++;
 	getline(logFile, line);
 	getline(logFile, line);
 	/*int total = line.size();
 	int inBit = total / (iFrame + 1);*/
 	int inBit = line.size();
 	vector<bool> vtmp;
-	for(int i = 0; i < inBit - 3 + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
+	for(int i = 0; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
 	inputSeq.push_back(vtmp);
 	for(int i = 0; i < iFrame; i++)
 	{
@@ -51,7 +58,7 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 		stack<bool> tempInput;
 		for(int j = 0; j < inBit; j++)
 		{
-			if(careBits[j] == true)
+			if(careBits[j] == 1)
 			{
 				bool tmp;
 				stringstream ss1;
