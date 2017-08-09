@@ -1,5 +1,5 @@
 all:
-	g++ -static -o main src/main.cpp src/readlog.cpp src/readlog.h src/parser.h src/parser.cpp src/triggergenerator.cpp src/triggergenerator.h src/countergenerator.cpp src/countergenerator.h src/detectorgenerator.cpp src/detectorgenerator.h
+	g++ -static -o main src/main.cpp src/readlog.cpp src/readlog.h src/parser.h src/parser.cpp src/triggergenerator.cpp src/triggergenerator.h src/countergenerator.cpp src/countergenerator.h src/detectorgenerator.cpp src/detectorgenerator.h src/resetgenerator.cpp src/resetgenerator.h
 run1:
 	./main ProblemD0426/tb1/fsm.v cadb160.v 1
 run1m:

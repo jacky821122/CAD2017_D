@@ -6,6 +6,7 @@
 #include <vector>
 #include "assertions.h"
 #include "parser.h"
+#include "resetgenerator.h"
 #include "triggergenerator.h"
 #include "countergenerator.h"
 #include "detectorgenerator.h"
@@ -25,7 +26,7 @@ int main(int argc, char* argv[])
 	system("rm -f outputs/*");
 	system("rm -f scripts/*");
 	vector<assertions*> vassertions;
-	vector<string> vTriggers, vCounters, vDetectors;
+	vector<string> vTriggers, vCounters, vDetectors, vResets; //Adding circuit
 	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg";
 	parse(argv[1], fsm, declarations, vassertions);
 	int nMonitors = 0;
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
 	{
 		cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
 		vector<assertions*> vassertions_ = vassertions;
-		string declarations_, fsm_, trigger, counter, detector;
+		string declarations_, fsm_, trigger, counter, detector, reset; //Adding circuit
 		parse(argv[1], fsm_, declarations_, vassertions_);
 		string Id;
 		stringstream ss;
@@ -81,6 +82,7 @@ int main(int argc, char* argv[])
 		trigger = triggerGenerator((**a), declarations_);
 		counter = counterGenerator((**a), declarations_);
 		detector = detectorGenerator((**a), declarations_);
+		reset = resetGenerator((**a), declarations_);
 
 		cerr << "Creating .v file......";
 		ofstream fout(verilogFileName);
@@ -89,6 +91,7 @@ int main(int argc, char* argv[])
 		fout << trigger;
 		fout << counter;
 		fout << detector;
+		fout << reset;
 		fout << "endmodule\n";
 		fout.close();
 		cout << "done." << endl;
@@ -133,6 +136,7 @@ int main(int argc, char* argv[])
 			vTriggers.push_back(trigger);
 			vCounters.push_back(counter);
 			vDetectors.push_back(detector);
+			vResets.push_back(reset);
 			size_t found = declarations_.find("output reg");
 			while(found != string::npos)
 			{
@@ -149,9 +153,12 @@ int main(int argc, char* argv[])
 			assign.append(Id);
 			always.append("    if(z");
 			always.append(Id);
-			always.append(") x");
+			always.append("==1) x");
 			always.append(Id);
 			always.append("=1;\n");
+			always.append("    else x");
+			always.append(Id);
+			always.append("=0;\n");
 			decx.append(", x");
 			decx.append(Id);
 
@@ -200,6 +207,7 @@ int main(int argc, char* argv[])
 		fout << vTriggers[i];
 		fout << vCounters[i];
 		fout << vDetectors[i];
+		fout << vResets[i];
 		fout << endl;
 	}
 	fout << "endmodule\n";
