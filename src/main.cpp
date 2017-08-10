@@ -26,16 +26,17 @@ int main(int argc, char* argv[])
 	system("rm -f outputs/*");
 	system("rm -f scripts/*");
 	vector<assertions*> vassertions;
-	vector<string> vTriggers, vCounters, vDetectors, vResets; //Adding circuit
-	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg";
+	vector<string> vTriggers, vCounters, vDetectors/*, vResets*/; //Adding circuit
+	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg", reset;
 	parse(argv[1], fsm, declarations, vassertions);
 	int nMonitors = 0;
+	reset = resetGenerator(declarations);
 	
 	for(vector<assertions*>::iterator a = vassertions.begin(); a != vassertions.end(); a++)
 	{
 		cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
 		vector<assertions*> vassertions_ = vassertions;
-		string declarations_, fsm_, trigger, counter, detector, reset; //Adding circuit
+		string declarations_, fsm_, trigger, counter, detector, reset, reset_; //Adding circuit
 		parse(argv[1], fsm_, declarations_, vassertions_);
 		string Id;
 		stringstream ss;
@@ -82,16 +83,16 @@ int main(int argc, char* argv[])
 		trigger = triggerGenerator((**a), declarations_);
 		counter = counterGenerator((**a), declarations_);
 		detector = detectorGenerator((**a), declarations_);
-		reset = resetGenerator((**a), declarations_);
+		reset_ = resetGenerator(declarations_);
 
 		cerr << "Creating .v file......";
 		ofstream fout(verilogFileName);
 		fout << declarations_;
 		fout << fsm_;
+		fout << reset_;
 		fout << trigger;
 		fout << counter;
 		fout << detector;
-		fout << reset;
 		fout << "endmodule\n";
 		fout.close();
 		cout << "done." << endl;
@@ -130,13 +131,14 @@ int main(int argc, char* argv[])
 		
 		if(readLog(blifFileName, logFileName, inputSeq_)) //if this assertion can fail --> take the monitor circuit
 		{
+			if((*a)->id == 4 || (*a)->id == 7 || (*a)->id == 10 || (*a)->id == 15 || (*a)->id == 17 || (*a)->id == 18) continue;
 			//Count the number of monitors
 			nMonitors++;
 			//Store this monitor
 			vTriggers.push_back(trigger);
 			vCounters.push_back(counter);
 			vDetectors.push_back(detector);
-			vResets.push_back(reset);
+			// vResets.push_back(reset);
 			size_t found = declarations_.find("output reg");
 			while(found != string::npos)
 			{
@@ -202,12 +204,12 @@ int main(int argc, char* argv[])
 	ofstream fout("verilogs/cadb160.v");
 	fout << declarations;
 	fout << fsm;
+	fout << reset;
 	for(int i = 0; i < nMonitors; i++)
 	{
 		fout << vTriggers[i];
 		fout << vCounters[i];
 		fout << vDetectors[i];
-		fout << vResets[i];
 		fout << endl;
 	}
 	fout << "endmodule\n";

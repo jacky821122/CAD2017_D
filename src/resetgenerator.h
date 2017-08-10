@@ -4,6 +4,6 @@
 #include "assertions.h"
 #include <string>
 
-std::string resetGenerator(assertions asser, std::string &dec);
+std::string resetGenerator(std::string &dec);
 
 #endif
