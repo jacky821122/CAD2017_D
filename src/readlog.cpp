@@ -25,7 +25,7 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 		else if(word.find("PPI") != string::npos)
 		{
 			PPIs++;
-			careBits.push_back(0);
+			careBits.push_back(3);
 		}
 		else if(word.find("rst") != string::npos) careBits.push_back(2);
 		else careBits.push_back(0);
@@ -51,16 +51,17 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	int inBit = total / (iFrame + 1);*/
 	int inBit = line.size();
 	vector<bool> vtmp;
-	for(int i = 0; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
+	for(int i = 0; i < inBit - 2 + 1 /* -clk -rst +rst */; i++) vtmp.push_back(0);
 	inputSeq.push_back(vtmp);
 	for(int i = 0; i < iFrame; i++)
 	{
 		vector<bool> inputOne;
+		vector<bool> ppiOne;
 		stack<bool> tempInput;
 		bool rstSig;
 		for(int j = 0; j < inBit; j++)
 		{
-			if(careBits[j] == 1)
+			if(careBits[j] == 1)  //input
 			{
 				bool tmp;
 				stringstream ss1;
@@ -68,17 +69,29 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 				ss1 >> tmp;
 				tempInput.push(tmp);
 			}
-			if(careBits[j] == 2)
+			if(careBits[j] == 2)  //rst
 			{
 				stringstream ss2;
 				ss2 << line.substr(j, 1);
 				ss2 >> rstSig;
+			}
+			if(careBits[j] == 3)  //PPIs
+			{
+				bool tmp;
+				stringstream ss3;
+				ss3 << line.substr(j, 1);
+				ss3 >> tmp;
+				ppiOne.push_back(tmp);
 			}
 		}
 		
 		/*if(i == 0) inputOne.push_back(1);
 		else inputOne.push_back(0);*/
 		inputOne.push_back(rstSig);
+		for(vector<bool>::iterator it = ppiOne.begin(); it != ppiOne.end(); it++)
+		{
+			inputOne.push_back((*it));
+		}
 		while(!tempInput.empty())
 		{
 			inputOne.push_back(tempInput.top());
