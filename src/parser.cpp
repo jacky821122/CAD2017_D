@@ -4,13 +4,13 @@
 
 using namespace std;
 
-void parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions)
+bool parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions)
 {
 	ifstream fin(file);
 	if(!fin.is_open()) {
 		// if(argc == 1) cout << "No input file.\n";
 		// else cout << "Cannot open the file \"" << argv[1] << "\".\n";
-		return void();
+		return false;
 	}
 	int flop = 0;
 	string line, word;
@@ -130,5 +130,5 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			declarations.append("\n");
 		}
 	}
-
+	return true;
 }

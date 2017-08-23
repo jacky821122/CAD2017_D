@@ -6,6 +6,6 @@
 
 using namespace std;
 
-void parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions);
+bool parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions);
 
 #endif

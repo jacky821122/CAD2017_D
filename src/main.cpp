@@ -20,15 +20,33 @@ typedef struct assertions assertions;
 
 int main(int argc, char* argv[])
 {
+	char *inFilter = argv[1];
+	char *outFilter = argv[3];
+	if(argc != 5 || (inFilter[0] != '-' && inFilter[1] != 'i') || (outFilter[0] != '-' && outFilter[1] != 'o'))
+	{
+		cout << "usage: ./main -i fsm.v -o input_sequence" << endl;
+		system("rm -rf verilogs");
+		system("rm -rf blifs");
+		system("rm -rf logs");
+		system("rm -rf scripts");
+		return 1;
+	}
+	vector<assertions*> vassertions;
+	vector<string> vTriggers, vCounters, vDetectors; //Adding circuit
+	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg", reset;
+	if(!parse(argv[2], fsm, declarations, vassertions))
+	{
+		cout << "cannot read input file \"" << argv[2] << "\": No such file" << endl;
+		system("rm -rf verilogs");
+		system("rm -rf blifs");
+		system("rm -rf logs");
+		system("rm -rf scripts");
+		return 1;
+	}
 	system("mkdir verilogs");
 	system("mkdir blifs");
 	system("mkdir logs");
-	// system("mkdir outputs");
 	system("mkdir scripts");
-	vector<assertions*> vassertions;
-	vector<string> vTriggers, vCounters, vDetectors/*, vResets*/; //Adding circuit
-	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg", reset;
-	parse(argv[1], fsm, declarations, vassertions);
 	int nMonitors = 0;
 	reset = resetGenerator(declarations);
 	
@@ -37,7 +55,7 @@ int main(int argc, char* argv[])
 		cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
 		vector<assertions*> vassertions_ = vassertions;
 		string declarations_, fsm_, trigger, counter, detector, reset, reset_; //Adding circuit
-		parse(argv[1], fsm_, declarations_, vassertions_);
+		parse(argv[2], fsm_, declarations_, vassertions_);
 		string Id;
 		stringstream ss;
 		ss << (*a)->id;
@@ -111,12 +129,6 @@ int main(int argc, char* argv[])
 		fout << "pdr -L logs/cadb160_asser" << Id << ".log" << endl;
 		fout.close();
 
-		/*fout.open("scripts/abcInt.sh");
-		fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
-		fout << "strash" << endl;
-		fout << "int -L logs/cadb160_asser" << Id << ".log" << endl;
-		fout.close();*/
-
 		vector<vector<bool> > inputSeq, inputSeq_;
 		
 		/*------------------Yosys synthesis------------------*/
@@ -132,13 +144,12 @@ int main(int argc, char* argv[])
 		if(readLog(blifFileName, logFileName, inputSeq_)) //if this assertion can fail --> take the monitor circuit
 		{
 			// if((*a)->id == 4 || (*a)->id == 7 || (*a)->id == 10 || (*a)->id == 15 || (*a)->id == 17 || (*a)->id == 18) continue;
-			//Count the number of monitors
+			/*------------------Count the number of monitors------------------*/
 			nMonitors++;
-			//Store this monitor
+			/*------------------Store this monitor------------------*/
 			vTriggers.push_back(trigger);
 			vCounters.push_back(counter);
 			vDetectors.push_back(detector);
-			// vResets.push_back(reset);
 			size_t found = declarations_.find("output reg");
 			while(found != string::npos)
 			{
@@ -163,33 +174,13 @@ int main(int argc, char* argv[])
 			always.append("=0;\n");
 			decx.append(", x");
 			decx.append(Id);
-
-			/*cerr << "Running \"int\" cmd (abc)......";
-			system("./abc -f scripts/abcInt.sh > /dev/null");
-			cout << "done." << endl;*/
 		}
 		else cout << "assertion" << (*a)->id << " is unsat." << endl;
 		
-		/*fout.open(outFileName);
-		if(readLog(blifFileName, logFileName, inputSeq))
-		{
-			for(int i = 0; i < inputSeq.size(); i++)
-			{
-				for(int j = 0; j < inputSeq[i].size(); j++)
-				{
-					fout << inputSeq[i][j];
-				}
-				fout << endl;
-			}
-			fout << endl;
-		} else fout << outFileName << " is UNSAT." << endl;
-		fout.close();*/
-
 	}
 
 	/*------------------Write a big .v file with all monitors and fsm circuits------------------*/
 	cout << endl << "Start dealing with all assertions " << endl;
-	// cout << decx << endl;
 	assign.replace(assign.find("&"), 1, " X = ");
 	decx.replace(decx.find(","), 2, " ");
 	assign.append(";\n");
@@ -242,7 +233,7 @@ int main(int argc, char* argv[])
 
 	/*------------------(.log) Write the input sequence (input_sequence)------------------*/
 	vector<vector<bool> > inputSeq;
-	fout.open("input_sequence");
+	fout.open(argv[4]);
 	if(readLog("blifs/cadb160.blif", "logs/cadb160.log", inputSeq))
 	{
 		for(int i = 0; i < inputSeq.size(); i++)
@@ -260,10 +251,8 @@ int main(int argc, char* argv[])
 	system("rm -rf verilogs");
 	system("rm -rf blifs");
 	system("rm -rf logs");
-	// system("rm -rf outputs");
 	system("rm -rf scripts");
 
-	
 	for (vector<assertions*>::iterator i = vassertions.begin(); i != vassertions.end(); ++i)
 		delete *i;
 	
