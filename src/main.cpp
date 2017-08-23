@@ -20,11 +20,11 @@ typedef struct assertions assertions;
 
 int main(int argc, char* argv[])
 {
-	system("rm -f verilogs/*");
-	system("rm -f blifs/*");
-	system("rm -f logs/*");
-	system("rm -f outputs/*");
-	system("rm -f scripts/*");
+	system("mkdir verilogs");
+	system("mkdir blifs");
+	system("mkdir logs");
+	// system("mkdir outputs");
+	system("mkdir scripts");
 	vector<assertions*> vassertions;
 	vector<string> vTriggers, vCounters, vDetectors/*, vResets*/; //Adding circuit
 	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg", reset;
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 
 	/*------------------(.log) Write the input sequence (input_sequence)------------------*/
 	vector<vector<bool> > inputSeq;
-	fout.open("outputs/input_sequence");
+	fout.open("input_sequence");
 	if(readLog("blifs/cadb160.blif", "logs/cadb160.log", inputSeq))
 	{
 		for(int i = 0; i < inputSeq.size(); i++)
@@ -254,9 +254,16 @@ int main(int argc, char* argv[])
 			fout << endl;
 		}
 		fout << endl;
-	} else fout << "outputs/input_sequence" << " is UNSAT." << endl;
+	} else fout << "input_sequence" << " is UNSAT." << endl;
 	fout.close();
 
+	system("rm -rf verilogs");
+	system("rm -rf blifs");
+	system("rm -rf logs");
+	// system("rm -rf outputs");
+	system("rm -rf scripts");
+
+	
 	for (vector<assertions*>::iterator i = vassertions.begin(); i != vassertions.end(); ++i)
 		delete *i;
 	
