@@ -85,6 +85,11 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 			tempInput.pop();
 		}
 		inputSeq.push_back(inputOne);
+		if(rstSig == 1)
+		{
+			for(int i = 0; i < inBit - 2 - PPIs + 1; i++) vtmp.push_back(0);
+			inputSeq.push_back(vtmp);
+		}
 		getline(logFile, line);
 		// for(int k = 0; k < inputOne.size(); k++)
 		// {

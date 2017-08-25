@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 		ofstream fout(verilogFileName);
 		fout << declarations_;
 		fout << fsm_;
-		fout << reset_;
+		// fout << reset_;
 		fout << trigger;
 		fout << counter;
 		fout << detector;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 	ofstream fout("verilogs/cadb160.v");
 	fout << declarations;
 	fout << fsm;
-	fout << reset;
+	// fout << reset;
 	for(int i = 0; i < nMonitors; i++)
 	{
 		fout << vTriggers[i];

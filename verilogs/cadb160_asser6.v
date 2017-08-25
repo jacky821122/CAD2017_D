@@ -204,24 +204,6 @@ S34: casex(in)
 endcase
 end
 
-always @(*) begin
-    case(rp)
-    S0: case(rst)
-        1'b0: begin rn=S1; r=0; end
-        1'b1: begin rn=S0; r=0; end
-        endcase
-    S1: case(rst)
-        1'b0: begin rn=S1; r=0; end
-        1'b1: begin rn=S2; r=1; end
-        endcase
-    S2: case(rst)
-        1'b0: begin rn=S1; r=0; end
-        1'b1: begin rn=S2; r=0; end
-        endcase
-    S3: begin rn=S3; r=0; end
-    endcase
-end
-
 always @(posedge clk) begin
     p6<=n6;
     tp6<=tn6;
