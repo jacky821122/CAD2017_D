@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg", reset;
 	parse(argv[1], fsm, declarations, vassertions);
 	int nMonitors = 0;
-	reset = resetGenerator(declarations);
+	//reset = resetGenerator(declarations);
 	
 	for(vector<assertions*>::iterator a = vassertions.begin(); a != vassertions.end(); a++)
 	{
@@ -83,13 +83,13 @@ int main(int argc, char* argv[])
 		trigger = triggerGenerator((**a), declarations_);
 		counter = counterGenerator((**a), declarations_);
 		detector = detectorGenerator((**a), declarations_);
-		reset_ = resetGenerator(declarations_);
+		//reset_ = resetGenerator(declarations_);
 
 		cerr << "Creating .v file......";
 		ofstream fout(verilogFileName);
 		fout << declarations_;
 		fout << fsm_;
-		fout << reset_;
+		//fout << reset_;
 		fout << trigger;
 		fout << counter;
 		fout << detector;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 	ofstream fout("verilogs/cadb160.v");
 	fout << declarations;
 	fout << fsm;
-	fout << reset;
+	//fout << reset;
 	for(int i = 0; i < nMonitors; i++)
 	{
 		fout << vTriggers[i];

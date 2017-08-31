@@ -59,11 +59,13 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			if(flop == 1 && line.size() == 0) continue;
 			// if(line.find("input clk, rst") != string::npos) line = "input clk;"; 
 			if(line.find("always @(posedge clk or posedge rst) begin") != string::npos) line = "always @(posedge clk) begin";
-			if(line.find("(rst)") != string::npos) line.replace(line.find("(rst)"), 5, "(r)");
+			if(line.find("if (rst)") != string::npos) line.replace(line.find("if (rst)"),22, "");
 			if(line.find("else pstate <= nstate;") != string::npos)
 			{
+				line.replace(line.find("else "), 5, "");
 				fsm.append(line);
-				fsm.append("\n rp <= rn;\n");
+				fsm.append("\nend\nalways@(clk) begin\n  $display(\"Time:\",$time);");
+				fsm.append("\n  $display(\"Input: %b  R: %b  Output: %b  pstate: %b  nstate: %b\",in,rst,out,pstate,nstate);\n");
 				continue;
 			}
 			if(word != "endmodule" && word != "input" && word != "output" && word != "module" && word != "reg" && word != "parameter")

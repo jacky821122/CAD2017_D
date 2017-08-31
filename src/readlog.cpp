@@ -85,9 +85,9 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 			}
 		}
 		
-		/*if(i == 0) inputOne.push_back(1);
-		else inputOne.push_back(0);*/
-		inputOne.push_back(rstSig);
+		if(i == 0) inputOne.push_back(1);
+		else inputOne.push_back(0);
+		//inputOne.push_back(rstSig);
 		for(vector<bool>::iterator it = ppiOne.begin(); it != ppiOne.end(); it++)
 		{
 			inputOne.push_back((*it));
