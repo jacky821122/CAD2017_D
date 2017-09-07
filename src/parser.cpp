@@ -1,8 +1,54 @@
 #include "parser.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include <vector>
 
 using namespace std;
+
+int removeLatch(char* file)
+{
+	ifstream fin(file);
+	string line, word, net;
+	vector<string> nstateNet, outline;
+	int nstateCount = 0;
+
+	while(getline(fin, line))
+	{
+		istringstream token(line);
+		token >> word;
+		if(word.find(".latch") != string::npos)
+		{
+			token >> net;
+			token >> word;
+			if(word.find("nstate") != string::npos)
+			{
+				nstateNet.push_back(net);
+				string newline = "#";
+				newline.append(line);
+				outline.push_back(newline);
+				continue;
+			}
+		}
+		if(word.find(".names") != string::npos)
+		{
+			if(line.find("rst") != string::npos && line.find("nstate") != string::npos)
+			{
+				line.replace(line.find("rst") + 4, line.find("]") - line.find("nstate") + 1, nstateNet[nstateCount]);
+				nstateCount++;
+			}
+		}
+		outline.push_back(line);
+	}
+	fin.close();
+
+	ofstream fout(file);
+	for(vector<string>::iterator it = outline.begin(); it != outline.end(); it++)
+	{
+		fout << (*it) << endl;
+	}
+	fout.close();
+}
 
 void parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions)
 {
@@ -35,6 +81,8 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			else tmp->trigger = 0;
 
 			tmp->triSignal = word.substr(word.find("(") + 1, word.find(")") - word.find("(") - 1);
+			tmp->triSignal_text = word.substr(word.find("(") + 1, word.find("[") - word.find("(") - 1);
+			tmp->triSignal_text.append(word.substr(word.find("[") + 1, 1));
 
 			int first = 0, second = 0;
 			stringstream ss1, ss2;
@@ -50,6 +98,8 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			else tmp->response = 0;
 
 			tmp->resSignal = word.substr(word.find("(") + 1, word.find(")") - word.find("(") - 1);
+			tmp->resSignal_text = word.substr(word.find("(") + 1, word.find("[") - word.find("(") - 1);
+			tmp->resSignal_text.append(word.substr(word.find("[") + 1, 1));
 			vassertions.push_back(tmp);
 			asserCount++;
 			getline(fin, line);
@@ -57,15 +107,16 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 		else
 		{
 			if(flop == 1 && line.size() == 0) continue;
+			if(line.find("always @(in or pstate) begin") != string::npos) line = "always @(posedge clk) begin";
 			// if(line.find("input clk, rst") != string::npos) line = "input clk;"; 
-			if(line.find("always @(posedge clk or posedge rst) begin") != string::npos) line = "always @(posedge clk) begin";
-			if(line.find("(rst)") != string::npos) line.replace(line.find("(rst)"), 5, "(r)");
-			if(line.find("else pstate <= nstate;") != string::npos)
+			// if(line.find("always @(posedge clk or posedge rst) begin") != string::npos) line = "always @(posedge clk) begin";
+			// if(line.find("(rst)") != string::npos) line.replace(line.find("(rst)"), 5, "(r)");
+			/*if(line.find("else pstate <= nstate;") != string::npos)
 			{
 				fsm.append(line);
 				fsm.append("\n rp <= rn;\n");
 				continue;
-			}
+			}*/
 			if(word != "endmodule" && word != "input" && word != "output" && word != "module" && word != "reg" && word != "parameter")
 			{
 				fsm.append(line);

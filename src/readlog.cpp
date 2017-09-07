@@ -14,12 +14,18 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	getline(blifFile, line);
 	getline(blifFile, line);
 	getline(blifFile, line);
-	getline(blifFile, line);
 	istringstream token1(line);
 	vector<int> careBits;
 	int PPIs = 0;
 	while(token1 >> word)
 	{
+		if(word == "\\")
+		{
+			getline(blifFile, line);
+			token1.clear();
+			token1.str(line);
+			continue;		
+		}
 		if(word == ".inputs") continue;
 		if(word.find("in[") != string::npos) careBits.push_back(1);
 		else if(word.find("PPI") != string::npos)
@@ -30,6 +36,7 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 		else if(word.find("rst") != string::npos) careBits.push_back(2);
 		else careBits.push_back(0);
 	}
+	cout << endl;
 
 	ifstream logFile(clogFile);
 	int iFrame = 0;
