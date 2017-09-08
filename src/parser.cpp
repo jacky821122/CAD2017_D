@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -11,6 +12,7 @@ int removeLatch(char* file)
 	ifstream fin(file);
 	string line, word, net;
 	vector<string> nstateNet, outline;
+	map<string, string> outNet;
 	int nstateCount = 0;
 
 	while(getline(fin, line))
@@ -29,6 +31,10 @@ int removeLatch(char* file)
 				outline.push_back(newline);
 				continue;
 			}
+			if(word.find("out") != string::npos)
+			{
+				outNet.insert(pair<string, string>(word, net));
+			}
 		}
 		if(word.find(".names") != string::npos)
 		{
@@ -37,6 +43,16 @@ int removeLatch(char* file)
 				line.replace(line.find("rst") + 4, line.find("]") - line.find("nstate") + 1, nstateNet[nstateCount]);
 				nstateCount++;
 			}
+
+			if(line.find("last") != string::npos && line.find("out") != string::npos)
+			{
+				// line.replace(line.find("out"), line.find("]", line.find("out") + 1) - line.find("out") + 1, outNet.find(line.substr(line.find("out"), line.find("]", line.find("out") + 1) - line.find("out") + 1))->second);
+			}
+
+			if(line.find("out") != string::npos)
+			{
+				// line.replace(line.find("out"), line.find("]", line.find("out") + 1) - line.find("out") + 1, outNet.find(line.substr(line.find("out"), line.find("]", line.find("out") + 1) - line.find("out") + 1))->second);
+			}		
 		}
 		outline.push_back(line);
 	}
@@ -61,6 +77,7 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 	int flop = 0;
 	string line, word;
 	int asserCount = 1;
+	string s0;
 
 	while(getline(fin, line))
 	{
@@ -100,6 +117,7 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			tmp->resSignal = word.substr(word.find("(") + 1, word.find(")") - word.find("(") - 1);
 			tmp->resSignal_text = word.substr(word.find("(") + 1, word.find("[") - word.find("(") - 1);
 			tmp->resSignal_text.append(word.substr(word.find("[") + 1, 1));
+			
 			vassertions.push_back(tmp);
 			asserCount++;
 			getline(fin, line);
@@ -107,16 +125,39 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 		else
 		{
 			if(flop == 1 && line.size() == 0) continue;
-			if(line.find("always @(in or pstate) begin") != string::npos) line = "always @(posedge clk) begin";
-			// if(line.find("input clk, rst") != string::npos) line = "input clk;"; 
-			// if(line.find("always @(posedge clk or posedge rst) begin") != string::npos) line = "always @(posedge clk) begin";
-			// if(line.find("(rst)") != string::npos) line.replace(line.find("(rst)"), 5, "(r)");
-			/*if(line.find("else pstate <= nstate;") != string::npos)
-			{
-				fsm.append(line);
-				fsm.append("\n rp <= rn;\n");
-				continue;
-			}*/
+			if(line.find("always @(in or pstate) begin") != string::npos) line = "always @(posedge clk) begin";			
+
+			// if(line.find("always @(posedge clk or posedge rst) begin") != string::npos)
+			// {
+				// line = "always @(posedge clk) begin";
+			// }
+			// if(line.find("(rst)") != string::npos) continue;
+			// if(line.find("else pstate <= nstate;") != string::npos)
+			// {
+				// line = "    pstate <= nstate;";
+				// fsm.append(line);
+				// fsm.append("\n");
+				// continue;
+			// }
+			// if(line.find("case (pstate)") != string::npos) 
+			// {
+			// 	line = "case (pstate)\n";
+			// 	// line = "else case (pstate)\n";
+			// 	fsm.append(line);
+			// 	getline(fin, line);
+			// 	while(line.find("endcase") == string::npos)
+			// 	{
+			// 		fsm.append(line);
+			// 		fsm.append("\n");
+			// 		s0.append(line);
+			// 		s0.append("\n");
+			// 		getline(fin, line);
+			// 	}
+			// 	s0.append(line);
+			// 	s0.append("\n");
+			// 	s0.replace(0, 3, "if(rst)");
+			// }
+
 			if(word != "endmodule" && word != "input" && word != "output" && word != "module" && word != "reg" && word != "parameter")
 			{
 				fsm.append(line);
@@ -164,9 +205,6 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 				token.str(line);
 				while(token >> word);
 			}
-			// stringstream ss;
-			// ss << word.substr(word.find("S") + 1, word.find("=") - word.find("S") - 1);
-			// ss >> numState;
 		}
 		if(word == "module")
 		{
@@ -177,9 +215,13 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 		}
 		if(word == "reg")
 		{
+			if(line.find("out") != string::npos) line.replace(0, 3, "wire");
 			declarations.append(line);
 			declarations.append("\n");
 		}
 	}
+	
+	// fsm.insert(fsm.find("else case (pstate)"), s0);
+	// fsm.insert(fsm.find("end", fsm.rfind("endcase")+1), s0);
 
 }

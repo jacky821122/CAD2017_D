@@ -11,6 +11,13 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 {
 	string line, word;
 	ifstream blifFile(cblifFile);
+
+	if(!blifFile.is_open())
+	{
+		cout << "Cannot open " << cblifFile << ": No such file." << endl;
+		return 1;
+	}
+
 	getline(blifFile, line);
 	getline(blifFile, line);
 	getline(blifFile, line);
@@ -36,9 +43,15 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 		else if(word.find("rst") != string::npos) careBits.push_back(2);
 		else careBits.push_back(0);
 	}
-	cout << endl;
+	// cout << endl;
 
 	ifstream logFile(clogFile);
+	if(!logFile.is_open()) 
+	{
+		cout << "Cannot open " << clogFile << ": No such file." << endl;
+		return 1;
+	}
+	
 	int iFrame = 0;
 	stringstream ss;
 	getline(logFile, line);
@@ -58,7 +71,8 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	int inBit = total / (iFrame + 1);*/
 	int inBit = line.size();
 	vector<bool> vtmp;
-	for(int i = 0; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
+	vtmp.push_back(1);
+	for(int i = 1; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
 	inputSeq.push_back(vtmp);
 	for(int i = 0; i < iFrame; i++)
 	{

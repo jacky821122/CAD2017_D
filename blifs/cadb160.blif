@@ -1,37 +1,37 @@
-# Benchmark "fsm" written by ABC on Thu Sep  7 16:59:17 2017
+# Benchmark "fsm" written by ABC on Sat Sep  9 03:50:16 2017
 .model fsm
 .inputs clk rst PPI1 PPI2 PPI3 PPI4 PPI5 PPI6 PPI7 PPI8 PPI9 PPI10 in[0] \
  in[1] in[2] in[3] in[4] in[5] in[6]
 .outputs Z
 
 .latch        n42        en1  2
-.latch        n47 last_in6_1  2
+.latch        n47 last_tri_1  2
 .latch        n52 clk_start1  2
 .latch        n57    detect1  2
-.latch        n62 last_out1_1  2
+.latch        n62 last_res_1  2
 .latch        n67        en2  2
-.latch        n72 last_in5_2  2
+.latch        n72 last_tri_2  2
 .latch        n77 clk_start2  2
 .latch        n82    detect2  2
-.latch        n87 last_out6_2  2
+.latch        n87 last_res_2  2
 .latch        n92        en3  2
-.latch        n97 last_out0_3  2
+.latch        n97 last_tri_3  2
 .latch       n102 clk_start3  2
 .latch       n107    detect3  2
-.latch       n112 last_out5_3  2
+.latch       n112 last_res_3  2
 .latch       n117        en4  2
 .latch       n122 clk_start4  2
 .latch       n127    detect4  2
 .latch       n132        en5  2
-.latch       n137 last_out3_5  2
+.latch       n137 last_tri_5  2
 .latch       n142 clk_start5  2
 .latch       n147    detect5  2
-.latch       n152 last_out4_5  2
+.latch       n152 last_res_5  2
 .latch       n157        en6  2
-.latch       n162 last_in0_6  2
+.latch       n162 last_tri_6  2
 .latch       n167 clk_start6  2
 .latch       n172    detect6  2
-.latch       n177 last_out2_6  2
+.latch       n177 last_res_6  2
 .latch       n182        en7  2
 .latch       n187 clk_start7  2
 .latch       n192    detect7  2
@@ -175,7 +175,7 @@
 01 1
 .names n382_1 n384 Z
 11 1
-.names in[6] last_in6_1 n386
+.names in[6] last_tri_1 n386
 10 1
 .names PPI1 n386 n387_1
 11 1
@@ -189,7 +189,7 @@
 00 1
 .names rst n391 n52
 00 1
-.names last_out1_1 out[1] n393
+.names last_res_1 out[1] n393
 01 1
 .names detect1 n393 n394
 00 1
@@ -203,7 +203,7 @@
 00 1
 .names rst out[1] n62
 01 1
-.names in[5] last_in5_2 n400
+.names in[5] last_tri_2 n400
 01 1
 .names PPI2 n400 n401
 11 1
@@ -217,7 +217,7 @@
 00 1
 .names rst n405 n77
 00 1
-.names last_out6_2 out[6] n407_1
+.names last_res_2 out[6] n407_1
 01 1
 .names detect2 n407_1 n408
 00 1
@@ -231,7 +231,7 @@
 00 1
 .names rst out[6] n87
 01 1
-.names last_out0_3 out[0] n414
+.names last_tri_3 out[0] n414
 10 1
 .names PPI3 n414 n415
 11 1
@@ -245,7 +245,7 @@
 00 1
 .names rst n419 n102
 00 1
-.names last_out5_3 out[5] n421
+.names last_res_3 out[5] n421
 01 1
 .names detect3 n421 n422_1
 00 1
@@ -279,7 +279,7 @@
 00 1
 .names rst n436 n127
 00 1
-.names last_out3_5 out[3] n438
+.names last_tri_5 out[3] n438
 01 1
 .names PPI5 n438 n439
 11 1
@@ -293,7 +293,7 @@
 00 1
 .names rst n443 n142
 00 1
-.names last_out4_5 out[4] n445
+.names last_res_5 out[4] n445
 01 1
 .names detect5 n445 n446
 00 1
@@ -307,7 +307,7 @@
 00 1
 .names rst out[4] n152
 01 1
-.names in[0] last_in0_6 n452_1
+.names in[0] last_tri_6 n452_1
 10 1
 .names PPI6 n452_1 n453
 11 1
@@ -321,7 +321,7 @@
 00 1
 .names rst n457_1 n167
 00 1
-.names last_out2_6 out[2] n459
+.names last_res_6 out[2] n459
 01 1
 .names detect6 n459 n460
 00 1
@@ -355,7 +355,7 @@
 00 1
 .names rst n474 n192
 00 1
-.names last_out6_2 out[6] n476
+.names last_res_2 out[6] n476
 10 1
 .names PPI8 n476 n477_1
 11 1
@@ -377,7 +377,7 @@
 00 1
 .names rst n485 n207
 00 1
-.names last_out0_3 out[0] n487_1
+.names last_tri_3 out[0] n487_1
 01 1
 .names PPI9 n487_1 n488
 11 1
@@ -389,7 +389,7 @@
 00 1
 .names rst n491 n217
 00 1
-.names last_out5_3 out[5] n493
+.names last_res_3 out[5] n493
 10 1
 .names detect9 n493 n494
 00 1
@@ -401,7 +401,7 @@
 00 1
 .names rst n497_1 n222
 00 1
-.names last_out1_1 out[1] n499
+.names last_res_1 out[1] n499
 10 1
 .names PPI10 n499 n500
 11 1

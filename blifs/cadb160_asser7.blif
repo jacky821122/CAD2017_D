@@ -1,4 +1,4 @@
-# Benchmark "fsm" written by ABC on Thu Sep  7 16:59:05 2017
+# Benchmark "fsm" written by ABC on Sat Sep  9 03:50:07 2017
 .model fsm
 .inputs clk rst in[0] in[1] in[2] in[3] in[4] in[5] in[6] PPI7
 .outputs z7
@@ -11,10 +11,10 @@
 .latch        n49  pstate[5]  2
 .latch        n54  pstate[6]  2
 .latch        n59        en7  2
-.latch        n64 last_out0_7  2
+.latch        n64 last_tri_7  2
 .latch        n69 clk_start7  2
 .latch        n74    detect7  2
-.latch        n79 last_out1_7  2
+.latch        n79 last_res_7  2
 .latch        n84        co7  2
 .latch        n89  count7[0]  2
 .latch        n94  count7[1]  2
@@ -53,7 +53,7 @@
 01 1
 .names rst n174 n54
 01 1
-.names last_out0_7 out[0] n114_1
+.names last_tri_7 out[0] n114_1
 10 1
 .names PPI7 n114_1 n115
 11 1
@@ -67,7 +67,7 @@
 00 1
 .names rst n119_1 n69
 00 1
-.names last_out1_7 out[1] n121
+.names last_res_7 out[1] n121
 01 1
 .names detect7 n121 n122
 00 1

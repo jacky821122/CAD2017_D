@@ -20,22 +20,60 @@ int createScript(string Id, string script);
 
 int main(int argc, char* argv[])
 {
-	// vector<vector<bool> > inputSeqq;
-	// 	readLog(argv[1], argv[2], inputSeqq);
-	// 	return 0;
+	vector<assertions*> vassertions;
+	vector<string> vTriggers, vCounters, vDetectors; //Adding circuit
+	string declarations, fsm, assign = "assign", decx = "wire", input = "input";
+	if(string(argv[1]) == "-p")
+	{
+		parse(argv[2], fsm, declarations, vassertions);
+		return 0;
+	}
+	if(string(argv[1]) == "-r")
+	{
+		ofstream fout;
+		vector<vector<bool> > inputSeq;
+		fout.open(argv[2]);
+
+		string temp2 = "blifs/cadb160_asser";
+		temp2.append(string(argv[3]));
+		temp2.append(".blif");
+		char blifFileName[1024];
+		strncpy(blifFileName, temp2.c_str(), sizeof(blifFileName));
+		blifFileName[sizeof(blifFileName) - 1] = 0;
+		
+		string temp1 = "logs/cadb160_asser";
+		temp1.append(string(argv[3]));
+		temp1.append(".log");
+		char logFileName[1024];
+		strncpy(logFileName, temp1.c_str(), sizeof(logFileName));
+		logFileName[sizeof(logFileName) - 1] = 0;
+
+		if(readLog(blifFileName, logFileName, inputSeq))
+		{
+			for(int i = 0; i < inputSeq.size(); i++)
+			{
+				for(int j = 0; j < inputSeq[i].size(); j++)
+				{
+					fout << inputSeq[i][j];
+				}
+				fout << endl;
+			}
+			fout << endl;
+		} else fout << argv[2] << " is UNSAT." << endl;
+		fout.close();
+		return 0; 
+	}
 	system("rm -f verilogs/*");
 	system("rm -f blifs/*");
 	system("rm -f logs/*");
 	system("rm -f outputs/*");
 	system("rm -f scripts/*");
-	vector<assertions*> vassertions;
-	vector<string> vTriggers, vCounters, vDetectors; //Adding circuit
-	string declarations, fsm, assign = "assign", decx = "wire", input = "input";
 	parse(argv[1], fsm, declarations, vassertions);
 	int nMonitors = 0;
 	
 	for(vector<assertions*>::iterator a = vassertions.begin(); a != vassertions.end(); a++)
 	{
+		// if((*a)->id != 9) continue;
 		cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
 		vector<assertions*> vassertions_ = vassertions;
 		string declarations_, fsm_, trigger, counter, detector; //Adding circuit
@@ -107,7 +145,8 @@ int main(int argc, char* argv[])
 		createScript(Id, "yosys");
 		createScript(Id, "abcToBlif");
 		createScript(Id, "abcPdr");
-		
+		createScript(Id, "abcInt");
+
 		/*fout.open("scripts/abcInt.sh");
 		fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
 		fout << "strash" << endl;
@@ -134,9 +173,12 @@ int main(int argc, char* argv[])
 		system("./abc -f scripts/abcPdr.sh > /dev/null");
 		cout << "done." << endl;
 		
+		ifstream blifFile(blifFileName), logFile(logFileName);
+		if(!blifFile.is_open() || !logFile.is_open()) continue;
+
 		if(readLog(blifFileName, logFileName, inputSeq_)) //if this assertion can fail --> take the monitor circuit
 		{
-			// if((*a)->id == 4 || (*a)->id == 7 || (*a)->id == 10 || (*a)->id == 15 || (*a)->id == 17 || (*a)->id == 18) continue;
+			//if((*a)->id == 9) continue;
 			//Count the number of monitors
 			nMonitors++;
 			//Store this monitor
@@ -156,9 +198,9 @@ int main(int argc, char* argv[])
 			decx.append(", z");
 			decx.append(Id);
 
-			/*cerr << "Running \"int\" cmd (abc)......";
+			cerr << "Running \"int\" cmd (abc)......";
 			system("./abc -f scripts/abcInt.sh > /dev/null");
-			cout << "done." << endl;*/
+			cout << "done." << endl;
 		}
 		else cout << "assertion" << (*a)->id << " is unsat." << endl;
 		
@@ -228,7 +270,7 @@ int main(int argc, char* argv[])
 
 	/*------------------(.blif) Abc int cmd (.log)------------------*/
 	cerr << "Running \"int\" cmd (abc)......";
-	system("./abc -f scripts/abcInt.sh > /dev/null");
+	system("./abc -f dc2.script");
 	cout << "done." << endl;
 
 	/*------------------(.log) Write the input sequence (input_sequence)------------------*/
