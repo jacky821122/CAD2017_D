@@ -196,44 +196,44 @@ endcase
 end
 
 assertion_rule1: assert property
-        (@(posedge clk) $rose(in[6])|->##[3:4] $rose(out[1]))
-         else $display("assertion rule 1 failed");
+	(@(posedge clk) $rose(in[6])|->##[3:4] $rose(out[1]))
+	 else $display("assertion rule 1 failed");
 
 assertion_rule2: assert property
-        (@(posedge clk) $fell(in[5])|->##[7:10] $rose(out[6]))
-         else $display("assertion rule 2 failed");
+	(@(posedge clk) $fell(in[5])|->##[7:10] $rose(out[6]))
+	 else $display("assertion rule 2 failed");
 
 assertion_rule3: assert property
-        (@(posedge clk) $fell(out[0])|->##[30:31] $rose(out[5]))
-         else $display("assertion rule 3 failed");
+	(@(posedge clk) $fell(out[0])|->##[30:31] $rose(out[5]))
+	 else $display("assertion rule 3 failed");
 
 assertion_rule4: assert property
-        (@(posedge clk) $fell(out[0])|->##[30:31] $rose(out[5]))
-         else $display("assertion rule 4 failed");
+	(@(posedge clk) $fell(out[0])|->##[30:31] $rose(out[5]))
+	 else $display("assertion rule 4 failed");
 
 assertion_rule5: assert property
-        (@(posedge clk) $rose(out[3])|->##[1:3] $rose(out[4]))
-         else $display("assertion rule 5 failed");
+	(@(posedge clk) $rose(out[3])|->##[1:3] $rose(out[4]))
+	 else $display("assertion rule 5 failed");
 
 assertion_rule6: assert property
-        (@(posedge clk) $rose(in[0])|->##[20:26] $rose(out[2]))
-         else $display("assertion rule 6 failed");
+	(@(posedge clk) $rose(in[0])|->##[20:26] $rose(out[2]))
+	 else $display("assertion rule 6 failed");
 
 assertion_rule7: assert property
-        (@(posedge clk) $fell(out[0])|->##[11:11] $rose(out[1]))
-         else $display("assertion rule 7 failed");
+	(@(posedge clk) $fell(out[0])|->##[11:11] $rose(out[1]))
+	 else $display("assertion rule 7 failed");
 
 
 assertion_rule8: assert property
-        (@(posedge clk) $fell(out[6])|->##[5:6] $fell(out[6]))
-         else $display("assertion rule 8 failed");
+	(@(posedge clk) $fell(out[6])|->##[5:6] $fell(out[6]))
+	 else $display("assertion rule 8 failed");
 
 assertion_rule9: assert property
-        (@(posedge clk) $rose(out[0])|->##[1:6] $fell(out[5]))
-         else $display("assertion rule 9 failed");
+	(@(posedge clk) $rose(out[0])|->##[1:6] $fell(out[5]))
+	 else $display("assertion rule 9 failed");
 
 assertion_rule10: assert property
-        (@(posedge clk) $fell(out[1])|->##[3:10] $rose(out[2]))
-         else $display("assertion rule 10 failed");
+	(@(posedge clk) $fell(out[1])|->##[3:10] $rose(out[2]))
+	 else $display("assertion rule 10 failed");
 
 endmodule

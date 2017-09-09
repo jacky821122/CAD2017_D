@@ -43,7 +43,6 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 		else if(word.find("rst") != string::npos) careBits.push_back(2);
 		else careBits.push_back(0);
 	}
-	// cout << endl;
 
 	ifstream logFile(clogFile);
 	if(!logFile.is_open()) 

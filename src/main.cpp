@@ -20,6 +20,7 @@ int createScript(string Id, string script);
 
 int main(int argc, char* argv[])
 {
+	int bound = -1, single = -1, fsmFileArg = 1;
 	vector<assertions*> vassertions;
 	vector<string> vTriggers, vCounters, vDetectors; //Adding circuit
 	string declarations, fsm, assign = "assign", decx = "wire", input = "input";
@@ -32,17 +33,22 @@ int main(int argc, char* argv[])
 	{
 		ofstream fout;
 		vector<vector<bool> > inputSeq;
-		fout.open(argv[2]);
+		string temp3 = "outputs/input_sequence";
+		temp3.append(string(argv[2]));
+		char outFileName[1024];
+		strncpy(outFileName, temp3.c_str(), sizeof(outFileName));
+		outFileName[sizeof(outFileName) - 1] = 0;
+		fout.open(outFileName);
 
 		string temp2 = "blifs/cadb160_asser";
-		temp2.append(string(argv[3]));
+		temp2.append(string(argv[2]));
 		temp2.append(".blif");
 		char blifFileName[1024];
 		strncpy(blifFileName, temp2.c_str(), sizeof(blifFileName));
 		blifFileName[sizeof(blifFileName) - 1] = 0;
 		
 		string temp1 = "logs/cadb160_asser";
-		temp1.append(string(argv[3]));
+		temp1.append(string(argv[2]));
 		temp1.append(".log");
 		char logFileName[1024];
 		strncpy(logFileName, temp1.c_str(), sizeof(logFileName));
@@ -63,21 +69,53 @@ int main(int argc, char* argv[])
 		fout.close();
 		return 0; 
 	}
+	string fsmFile = "ProblemD0426/tb";
+	if(string(argv[1]) == "-c")
+	{
+		stringstream ss, ss1;
+		ss << string(argv[2]);
+		ss >> bound;
+		fsmFile.append(argv[3]);
+		fsmFile.append("/fsm.v");
+	}
+	if(string(argv[1]) == "-n")
+	{
+		stringstream ss;
+		ss << string(argv[2]);
+		ss >> single;
+		fsmFile.append(argv[3]);
+		fsmFile.append("/fsm.v");
+	}
+	char fsmFileName[1024];
+	strncpy(fsmFileName, fsmFile.c_str(), sizeof(fsmFileName));
+	fsmFileName[sizeof(fsmFileName) - 1] = 0;
+
 	system("rm -f verilogs/*");
 	system("rm -f blifs/*");
 	system("rm -f logs/*");
 	system("rm -f outputs/*");
 	system("rm -f scripts/*");
-	parse(argv[1], fsm, declarations, vassertions);
+	parse((fsmFile != "ProblemD0426/tb")? fsmFileName : argv[1], fsm, declarations, vassertions);
 	int nMonitors = 0;
 	
 	for(vector<assertions*>::iterator a = vassertions.begin(); a != vassertions.end(); a++)
 	{
-		// if((*a)->id != 9) continue;
+		if(bound != -1)
+		{
+			if((*a)->id > bound)
+				continue;
+		}
+
+		if(single != -1)
+		{
+			if((*a)->id != single)
+				continue;
+		}
+
 		cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
 		vector<assertions*> vassertions_ = vassertions;
 		string declarations_, fsm_, trigger, counter, detector; //Adding circuit
-		parse(argv[1], fsm_, declarations_, vassertions_);
+		parse((fsmFile != "ProblemD0426/tb")? fsmFileName : argv[1], fsm_, declarations_, vassertions_);
 		string Id;
 		stringstream ss;
 		ss << (*a)->id;
@@ -220,6 +258,8 @@ int main(int argc, char* argv[])
 		fout.close();*/
 
 	}
+
+	if(bound != -1 || single != -1) return 0;
 
 	/*------------------Write a big .v file with all monitors and fsm circuits------------------*/
 	string Id = "-1";
