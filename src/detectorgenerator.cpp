@@ -52,7 +52,7 @@ string detectorGenerator(assertions asser, string &dec)
 
 	if(asser.response) {detector.append("assign detect_n"); detector.append(id); detector.append(" = detect"); detector.append(id); detector.append(" | (~last_"); detector.append(sResSig); detector.append(" & "); detector.append(resSignal); detector.append(");\n"); }
 	else {detector.append("assign detect_n"); detector.append(id); detector.append(" = detect"); detector.append(id); detector.append(" | (last_"); detector.append(sResSig); detector.append(" & ~"); detector.append(resSignal); detector.append(");\n"); }
-	detector.append("assign clk_start_n"); detector.append(id); detector.append(" = clk_start"); detector.append(id); detector.append(" | co"); detector.append(id); detector.append(" & en_n"); detector.append(id); detector.append(";\n");
+	detector.append("assign clk_start_n"); detector.append(id); detector.append(" = clk_start"); detector.append(id); detector.append(" | (co"); detector.append(id); detector.append(" & en_n"); detector.append(id); detector.append(");\n");
 	detector.append("assign z"); detector.append(id); detector.append(" = (~detect_n"); detector.append(id); detector.append(" & (clk_start_n"); detector.append(id); detector.append(" & ~co"); detector.append(id); detector.append("));\n");
 
 	return detector;

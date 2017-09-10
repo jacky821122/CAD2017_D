@@ -42,6 +42,9 @@ int removeLatch(char* file)
 			{
 				line.replace(line.find("rst") + 4, line.find("]") - line.find("nstate") + 1, nstateNet[nstateCount]);
 				nstateCount++;
+				outline.push_back(line);
+				getline(fin, line);
+				line.replace(0, 1, "-");
 			}
 
 			if(line.find("last") != string::npos && line.find("out") != string::npos)
@@ -66,18 +69,20 @@ int removeLatch(char* file)
 	fout.close();
 }
 
-void parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions)
+bool parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions)
 {
 	ifstream fin(file);
 	if(!fin.is_open()) {
 		// if(argc == 1) cout << "No input file.\n";
 		cout << "Cannot open the file \"" << file << "\".\n";
-		return void();
+		cout << "Usage: ./main –i fsm.v –o input_sequence" << endl;
+		return false;
 	}
 	int flop = 0;
-	string line, word;
+	string line, word, lineWithDef;
 	int asserCount = 1;
 	string s0;
+	int count = 0;
 
 	while(getline(fin, line))
 	{
@@ -129,30 +134,44 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			/*-----------------------Default path-----------------------*/
 			/*-----------------------(Duble default: uncomment line:134-153)-----------------------*/
 			/*-----------------------(Single default: uncomment line:134-146 & line:154)-----------------------*/
-			if(line.find("casex") != string::npos)
-			{
-				/*string s1;
-				fsm.append(line);
-				fsm.append("\n");
-				getline(fin, line);
-				while(line.find("endcase") == string::npos)
-				{
-					fsm.append(line);
-					fsm.append("\n");
-					s1.append("    ");
-					s1.append(line);
-					s1.append("\n");
-					getline(fin, line);					
-				}*/
-				/*s1.replace(0, 4, "");
-				fsm.append("  default: begin\n");
-				fsm.append("    case(in2)\n    ");
-				fsm.append(s1);
-				fsm.append("      default: begin nstate = pstate; end\n");
-				fsm.append("    endcase\n");
-				fsm.append("  end\n");*/
-				// fsm.append("  default: begin nstate = pstate; end\n");
-			}     
+			// if(line.find("casex") != string::npos)
+			// {
+			// 	string s1;
+			// 	fsm.append(line);
+			// 	fsm.append("\n");
+			// 	getline(fin, line);
+			// 	while(line.find("endcase") == string::npos)
+			// 	{
+			// 		istringstream token2(line);
+			// 		string tmpword;
+			// 		while(token2 >> tmpword && tmpword != "end") continue;
+			// 		lineWithDef = line;
+			// 		line.insert(line.find("end"), "def = 0; ");
+			// 		lineWithDef.insert(lineWithDef.find("end"), "def = 1; ");
+			// 		fsm.append(line);
+			// 		fsm.append("\n");
+			// 		s1.append("    ");
+			// 		s1.append(lineWithDef);
+			// 		s1.append("\n");
+			// 		// if(count == 0)
+			// 		// {
+			// 		// 	s0.append("    ");
+			// 		// 	s0.append(lineWithDef);
+			// 		// 	s0.append("\n");
+			// 		// }
+			// 		getline(fin, line);					
+			// 	}
+			// 	s1.replace(0, 4, "");
+			// 	fsm.append("  default: begin\n");
+			// 	fsm.append("    if(~def) case(in2)\n    ");
+			// 	fsm.append(s1);
+			// 	fsm.append("      default: begin def = 1; end\n");
+			// 	fsm.append("    endcase\n");
+			// 	fsm.append("    else nstate = pstate;\n");
+			// 	fsm.append("  end\n");
+			// 	count++;
+			// 	// fsm.append("  default: begin nstate = pstate; end\n");
+			// }
 
 			/*-----------------------remove reset multiple define-----------------------*/
 			/*if(line.find("always @(posedge clk or posedge rst) begin") != string::npos)
@@ -171,24 +190,24 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			/*-----------------------Change output immediately whenever facing reset-----------------------*/
 			/*-----------------------(Use [if else] block -> uncomment line:177 & line:265)-----------------------*/
 			/*-----------------------(Put [if] at the bottom of always block -> uncomment line:266 and DON'T uncomment line:177)-----------------------*/
-			/*if(line.find("case (pstate)") != string::npos) 
+			if(line.find("case (pstate)") != string::npos) 
 			{
-			 line = "case (pstate)\n";
-			 // line = "else case (pstate)\n";
-			 fsm.append(line);
-			 getline(fin, line);
-			 while(line.find("endcase") == string::npos)
-			 {
-			     fsm.append(line);
-			     fsm.append("\n");
-			     s0.append(line);
-			     s0.append("\n");
-			     getline(fin, line);
-			 }
-			 s0.append(line);
-			 s0.append("\n");
-			 s0.replace(0, 3, "if(rst)");
-			}*/
+			 // line = "case (pstate)\n";
+			 // line = "else case (pstate)";
+			 // fsm.append(line);
+			 // getline(fin, line);
+			 // while(line.find("endcase") == string::npos)
+			 // {
+				 // fsm.append(line);
+				 // fsm.append("\n");
+				 // s0.append(line);
+				 // s0.append("\n");
+				 // getline(fin, line);
+			 // }
+			 // s0.append(line);
+			 // s0.append("\n");
+			 // s0.replace(0, 3, "if(rst)");
+			}
 
 			if(word != "endmodule" && word != "input" && word != "output" && word != "module" && word != "reg" && word != "parameter")
 			{
@@ -258,6 +277,8 @@ void parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			declarations.append("\n");
 		}
 	}
+
+	// declarations.append("reg def;");
 
 	string always = "always @(posedge clk) begin\n    in2 <= in;\nend\n\n";
 	fsm.insert(fsm.find("always @(posedge clk) begin"), always);
