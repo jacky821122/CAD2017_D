@@ -25,6 +25,11 @@ int main(int argc, char* argv[])
 	vector<string> vTriggers, vCounters, vDetectors; //Adding circuit
 	string declarations, fsm, assign = "assign", decx = "wire", input = "input";
 	string fsmFile = "ProblemD0426/tb";
+	if(string(argv[1]) == "-version") 
+	{
+		cout << "Final version." << endl;
+		return 0;
+	}
 	if(string(argv[1]) == "-p")
 	{
 		parse(argv[2], fsm, declarations, vassertions);
@@ -354,7 +359,7 @@ int main(int argc, char* argv[])
 	for (vector<assertions*>::iterator i = vassertions.begin(); i != vassertions.end(); ++i)
 		delete *i;
 	
-    system("rm -f verilogs/*");
+		system("rm -f verilogs/*");
 	system("rm -f blifs/*");
 	system("rm -f logs/*");
 	system("rm -f outputs/*");

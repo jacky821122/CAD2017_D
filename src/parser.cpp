@@ -134,58 +134,60 @@ bool parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 			/*-----------------------Default path-----------------------*/
 			/*-----------------------(Duble default: uncomment line:134-153)-----------------------*/
 			/*-----------------------(Single default: uncomment line:134-146 & line:154)-----------------------*/
-			// if(line.find("casex") != string::npos)
-			// {
-			// 	string s1;
-			// 	fsm.append(line);
-			// 	fsm.append("\n");
-			// 	getline(fin, line);
-			// 	while(line.find("endcase") == string::npos)
-			// 	{
-			// 		istringstream token2(line);
-			// 		string tmpword;
-			// 		while(token2 >> tmpword && tmpword != "end") continue;
-			// 		lineWithDef = line;
-			// 		line.insert(line.find("end"), "def = 0; ");
-			// 		lineWithDef.insert(lineWithDef.find("end"), "def = 1; ");
-			// 		fsm.append(line);
-			// 		fsm.append("\n");
-			// 		s1.append("    ");
-			// 		s1.append(lineWithDef);
-			// 		s1.append("\n");
-			// 		// if(count == 0)
-			// 		// {
-			// 		// 	s0.append("    ");
-			// 		// 	s0.append(lineWithDef);
-			// 		// 	s0.append("\n");
-			// 		// }
-			// 		getline(fin, line);					
-			// 	}
-			// 	s1.replace(0, 4, "");
-			// 	fsm.append("  default: begin\n");
-			// 	fsm.append("    if(~def) case(in2)\n    ");
-			// 	fsm.append(s1);
-			// 	fsm.append("      default: begin def = 1; end\n");
-			// 	fsm.append("    endcase\n");
-			// 	fsm.append("    else nstate = pstate;\n");
-			// 	fsm.append("  end\n");
-			// 	count++;
-			// 	// fsm.append("  default: begin nstate = pstate; end\n");
-			// }
+			if(line.find("casex") != string::npos)
+			{
+				string s1;
+				fsm.append(line);
+				fsm.append("\n");
+				getline(fin, line);
+				while(line.find("endcase") == string::npos)
+				{
+					istringstream token2(line);
+					string tmpword;
+					while(token2 >> tmpword && tmpword != "end") continue;
+					line.replace(line.find("nstate"), 1, "p");
+					lineWithDef = line;
+					line.insert(line.find("end"), "def = 0; ");
+					lineWithDef.insert(lineWithDef.find("end"), "def = 1; ");
+					fsm.append(line);
+					fsm.append("\n");
+					s1.append("    ");
+					s1.append(lineWithDef);
+					s1.append("\n");
+					// if(count == 0)
+					// {
+					// 	s0.append("    ");
+					// 	s0.append(lineWithDef);
+					// 	s0.append("\n");
+					// }
+					getline(fin, line);					
+				}
+				/*s1.replace(0, 4, "");
+				fsm.append("  default: begin\n");
+				fsm.append("    if(~def) case(in2)\n    ");
+				fsm.append(s1);
+				fsm.append("      default: begin def = 1; end\n");
+				fsm.append("    endcase\n");
+				fsm.append("    else pstate = pstate;\n");
+				fsm.append("  end\n");*/
+				count++;
+				// fsm.append("  default: begin nstate = pstate; end\n");
+			}
 
 			/*-----------------------remove reset multiple define-----------------------*/
-			/*if(line.find("always @(posedge clk or posedge rst) begin") != string::npos)
+			if(line.find("always @(posedge clk or posedge rst) begin") != string::npos)
 			{
 				line = "always @(posedge clk) begin";
 			}
 			if(line.find("(rst)") != string::npos) continue;
 			if(line.find("else pstate <= nstate;") != string::npos)
 			{
+				continue;
 				line = "    pstate <= nstate;";
 				fsm.append(line);
 				fsm.append("\n");
 				continue;
-			}*/
+			}
 
 			/*-----------------------Change output immediately whenever facing reset-----------------------*/
 			/*-----------------------(Use [if else] block -> uncomment line:177 & line:265)-----------------------*/
@@ -278,7 +280,7 @@ bool parse(char* file, string &fsm, string &declarations, vector<assertions*> &v
 		}
 	}
 
-	// declarations.append("reg def;");
+	declarations.append("reg def;");
 
 	string always = "always @(posedge clk) begin\n    in2 <= in;\nend\n\n";
 	fsm.insert(fsm.find("always @(posedge clk) begin"), always);
