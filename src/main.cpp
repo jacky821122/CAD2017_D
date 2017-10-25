@@ -6,7 +6,6 @@
 #include <vector>
 #include "assertions.h"
 #include "parser.h"
-#include "resetgenerator.h"
 #include "triggergenerator.h"
 #include "countergenerator.h"
 #include "detectorgenerator.h"
@@ -15,29 +14,120 @@
 using namespace std;
 
 #define PAUSE printf("Press Enter key to continue..."); fgetc(stdin);
+bool verbose = false;
 
 typedef struct assertions assertions;
+int createScript(string Id, string script);
+string createFileName(string id, string name);
 
 int main(int argc, char* argv[])
 {
+	int bound = -1, single = -1, fsmFileArg = 1;
+	vector<assertions*> vassertions;
+	vector<string> vTriggers, vCounters, vDetectors; //Adding circuit
+	string declarations, fsm, assign = "assign", decx = "wire", input = "input";
+	string fsmFile;
+	bool readFromArg = true;
+	if(string(argv[1]) == "-version") 
+	{
+		cout << "Final version." << endl;
+		return 0;
+	}
+	if(string(argv[1]) == "-p")
+	{
+		parse(argv[2], fsm, declarations, vassertions);
+		return 0;
+	}
+	else if(string(argv[1]) == "-r")
+	{
+		ofstream fout;
+		vector<vector<bool> > inputSeq;
+		string outFileName = createFileName(string(argv[2]), "output");
+		string blifFileName = createFileName(string(argv[2]), "blif");
+		string logFileName = createFileName(string(argv[2]), "log");
+		fout.open(outFileName.c_str());
+
+		if(readLog(blifFileName.c_str(), logFileName.c_str(), inputSeq))
+		{
+			for(int i = 0; i < inputSeq.size(); i++)
+			{
+				for(int j = 0; j < inputSeq[i].size(); j++)
+				{
+					fout << inputSeq[i][j];
+				}
+				fout << endl;
+			}
+			fout << endl;
+		} else fout << argv[2] << " is UNSAT." << endl;
+		fout.close();
+		return 0; 
+	}
+	else if(string(argv[1]) == "-c")
+	{
+		stringstream ss;
+		ss << string(argv[2]);
+		ss >> bound;
+		fsmFile = createFileName(string(argv[3]), "fsm");
+		readFromArg = false;
+	}
+	else if(string(argv[1]) == "-n")
+	{
+		stringstream ss;
+		ss << string(argv[2]);
+		ss >> single;
+		fsmFile = createFileName(string(argv[3]), "fsm");
+		readFromArg = false;
+	}
+	else if(string(argv[1]) == "-i")
+	{
+		if(argc != 5)
+		{
+			cout << "Usage: ./main –i fsm.v –o input_sequence" << endl;
+			return 1;
+		}
+		string temp = string(argv[2]);
+		vector<char> vfsmFile = vector<char>(temp.begin(), temp.end());
+		vfsmFile.push_back('\0');
+		fsmFile = &vfsmFile[0];
+		readFromArg = false;
+	}
+	else
+	{
+		ifstream test(argv[1]);
+		if(!test.is_open())
+		{
+			cout << "Usage: ./main –i fsm.v –o input_sequence" << endl;
+			return 1;
+		}
+	}
+	string fsmFileName = (readFromArg)? argv[1] : fsmFile;
+
 	system("rm -f verilogs/*");
 	system("rm -f blifs/*");
 	system("rm -f logs/*");
 	system("rm -f outputs/*");
 	system("rm -f scripts/*");
-	vector<assertions*> vassertions;
-	vector<string> vTriggers, vCounters, vDetectors/*, vResets*/; //Adding circuit
-	string declarations, fsm, assign = "assign", always = "always @(*) begin\n", decx = "reg", reset;
-	parse(argv[1], fsm, declarations, vassertions);
+	if(!parse(fsmFileName.c_str(), fsm, declarations, vassertions)) return 1;
 	int nMonitors = 0;
-	reset = resetGenerator(declarations);
 	
 	for(vector<assertions*>::iterator a = vassertions.begin(); a != vassertions.end(); a++)
 	{
-		cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
+		if(bound != -1)
+		{
+			if((*a)->id > bound)
+				continue;
+		}
+
+		if(single != -1)
+		{
+			if((*a)->id != single)
+				continue;
+		}
+
+		if(verbose) cout << endl << "Start dealing with assertion " << (*a)->id << endl;  //First, use "pdr" to check whether this assertion can fail
 		vector<assertions*> vassertions_ = vassertions;
-		string declarations_, fsm_, trigger, counter, detector, reset, reset_; //Adding circuit
-		parse(argv[1], fsm_, declarations_, vassertions_);
+		string declarations_, fsm_, trigger, counter, detector; //Adding circuit
+		if(!parse(fsmFileName.c_str(), fsm_, declarations_, vassertions_)) return 1;
 		string Id;
 		stringstream ss;
 		ss << (*a)->id;
@@ -47,70 +137,44 @@ int main(int argc, char* argv[])
 		declarations_.insert(declarations_.find(")"), ", z");
 		declarations_.insert(declarations_.find(")"), Id);
 
-		/*------------------Generate .v file name------------------*/
-		string temp = "verilogs/cadb160_asser";
-		temp.append(Id);
-		temp.append(".v");
-		char verilogFileName[1024];
-		strncpy(verilogFileName, temp.c_str(), sizeof(verilogFileName));
-		verilogFileName[sizeof(verilogFileName) - 1] = 0;
-
-		/*------------------Generate .log file name------------------*/
-		string temp1 = "logs/cadb160_asser";
-		temp1.append(Id);
-		temp1.append(".log");
-		char logFileName[1024];
-		strncpy(logFileName, temp1.c_str(), sizeof(logFileName));
-		logFileName[sizeof(logFileName) - 1] = 0;
-
-		/*------------------Generate .blif file name------------------*/
-		string temp2 = "blifs/cadb160_asser";
-		temp2.append(Id);
-		temp2.append(".blif");
-		char blifFileName[1024];
-		strncpy(blifFileName, temp2.c_str(), sizeof(blifFileName));
-		blifFileName[sizeof(blifFileName) - 1] = 0;
-
-		/*------------------Generate .out file name------------------*/
-		/*string temp3 = "outputs/cadb160_asser";
-		temp3.append(Id);
-		temp3.append(".out");
-		char outFileName[1024];
-		strncpy(outFileName, temp3.c_str(), sizeof(outFileName));
-		outFileName[sizeof(outFileName) - 1] = 0;*/
+		/*------------------Generate file names------------------*/
+		string verilogFileName = createFileName(Id, "verilog");
+		string logFileName = createFileName(Id, "log");
+		string blifFileName = createFileName(Id, "blif");
 
 		/*------------------Generate the Monitor of this assertion(should be stored in a vector)------------------*/
+		declarations_.insert(declarations_.find("parameter"), "input PPI");
+		declarations_.insert(declarations_.find("parameter"), Id);
+		declarations_.insert(declarations_.find("parameter"), ";\n");
 		trigger = triggerGenerator((**a), declarations_);
 		counter = counterGenerator((**a), declarations_);
 		detector = detectorGenerator((**a), declarations_);
-		reset_ = resetGenerator(declarations_);
+		declarations_.insert(declarations_.find("parameter"), "output z");
+		declarations_.insert(declarations_.find("parameter"), Id);
+		declarations_.insert(declarations_.find("parameter"), ";\n");
+		size_t found = fsm_.find("default:");
+		while(found != string::npos)
+		{
+			found = fsm_.find("default:", found + 1);
+		}
 
-		cerr << "Creating .v file......";
-		ofstream fout(verilogFileName);
+		if(verbose) cerr << "Creating .v file......";
+		ofstream fout(verilogFileName.c_str());
 		fout << declarations_;
 		fout << fsm_;
-		fout << reset_;
 		fout << trigger;
 		fout << counter;
 		fout << detector;
 		fout << "endmodule\n";
 		fout.close();
-		cout << "done." << endl;
+		if(verbose) cout << "done." << endl;
 
-		/*------------------Generate yosys script to synthesis all .v files------------------*/
-		fout.open("scripts/yosys.sh");
-		fout << "read_verilog verilogs/cadb160_asser" << Id << ".v" << endl;
-		fout << "hierarchy; proc; fsm; techmap;" << endl;
-		fout << "write_blif blifs/cadb160_asser" << Id << ".blif" << endl;
-		fout.close();
+		/*------------------Generate script files------------------*/
+		createScript(Id, "yosys");
+		createScript(Id, "abcToBlif");
+		createScript(Id, "abcPdr");
 
-		/*------------------Generate abc script to solve all .blif files------------------*/
-		fout.open("scripts/abcPdr.sh");
-		fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
-		fout << "strash" << endl;
-		fout << "pdr -L logs/cadb160_asser" << Id << ".log" << endl;
-		fout.close();
-
+		// createScript(Id, "abcInt");
 		/*fout.open("scripts/abcInt.sh");
 		fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
 		fout << "strash" << endl;
@@ -120,55 +184,50 @@ int main(int argc, char* argv[])
 		vector<vector<bool> > inputSeq, inputSeq_;
 		
 		/*------------------Yosys synthesis------------------*/
-		cerr << "Creating .blif file (yosys)......";
+		if(verbose) cerr << "Creating .blif file (yosys)......";
 		system("./yosys -q -s scripts/yosys.sh");
-		cout << "done." << endl;
+		if(verbose) cout << "done." << endl;
+
+		/*------------------Abc to blif------------------*/
+		if(verbose) cerr << "Rewriting .blif files (abc)......";
+		system("./abc -f scripts/abcToBlif.sh > /dev/null");
+		if(verbose) cout << "done." << endl;
 
 		/*------------------Abc pdr cmd------------------*/
-		cerr << "Running \"pdr\" cmd (abc)......";
-		system("./abc -f scripts/abcPdr.sh > /dev/null");
-		cout << "done." << endl;
+		if(verbose) cerr << "Running \"pdr\" cmd (abc)......";
+		if(verbose) system("./abc -f scripts/abcPdr.sh");
+		else system("./abc -f scripts/abcPdr.sh > /dev/null");
+		if(verbose) cout << "done." << endl;
 		
-		if(readLog(blifFileName, logFileName, inputSeq_)) //if this assertion can fail --> take the monitor circuit
+		ifstream blifFile(blifFileName.c_str()), logFile(logFileName.c_str());
+		if(!blifFile.is_open() || !logFile.is_open()) continue;
+
+		if(readLog(blifFileName.c_str(), logFileName.c_str(), inputSeq_)) //if this assertion can fail --> take the monitor circuit
 		{
-			// if((*a)->id == 4 || (*a)->id == 7 || (*a)->id == 10 || (*a)->id == 15 || (*a)->id == 17 || (*a)->id == 18) continue;
+			//if((*a)->id == 9) continue;
 			//Count the number of monitors
 			nMonitors++;
 			//Store this monitor
 			vTriggers.push_back(trigger);
 			vCounters.push_back(counter);
 			vDetectors.push_back(detector);
-			// vResets.push_back(reset);
-			size_t found = declarations_.find("output reg");
-			while(found != string::npos)
-			{
-				declarations_.replace(found, 8, "r");
-				found = declarations_.find("output reg", found + 1);
-			}
-			size_t found1 = declarations_.find("reg [1:0]"), found2 = declarations_.find("parameter");
+			size_t found1 = declarations_.find("reg la"), found2 = declarations_.find("output");
 			declarations.insert(declarations.find("parameter"), declarations_.substr(found1, found2 - found1));
 			declarations.insert(declarations.find("in);"), "PPI");
 			declarations.insert(declarations.find("in);"), Id);
 			declarations.insert(declarations.find("in);"), ", ");
-			assign.append("&");
-			assign.append("x");
+			input.append(", PPI");
+			input.append(Id);
+			assign.append(" & ");
+			assign.append("z");
 			assign.append(Id);
-			always.append("    if(z");
-			always.append(Id);
-			always.append("==1) x");
-			always.append(Id);
-			always.append("=1;\n");
-			always.append("    else x");
-			always.append(Id);
-			always.append("=0;\n");
-			decx.append(", x");
+			decx.append(", z");
 			decx.append(Id);
 
-			/*cerr << "Running \"int\" cmd (abc)......";
-			system("./abc -f scripts/abcInt.sh > /dev/null");
-			cout << "done." << endl;*/
+			// cerr << "Running \"int\" cmd (abc)......";
+			// system("./abc -f scripts/abcInt.sh > /dev/null");
+			// cout << "done." << endl;
 		}
-		else cout << "assertion" << (*a)->id << " is unsat." << endl;
 		
 		/*fout.open(outFileName);
 		if(readLog(blifFileName, logFileName, inputSeq))
@@ -187,24 +246,26 @@ int main(int argc, char* argv[])
 
 	}
 
+	if(bound != -1 || single != -1) return 0;
+
 	/*------------------Write a big .v file with all monitors and fsm circuits------------------*/
-	cout << endl << "Start dealing with all assertions " << endl;
-	// cout << decx << endl;
-	assign.replace(assign.find("&"), 1, " X = ");
+	string Id = "-1";
+	if(verbose) cout << endl << "Start dealing with all assertions " << endl;
+	assign.replace(assign.find("&"), 1, " Z =");
+	input.replace(input.find(","), 2, " ");
 	decx.replace(decx.find(","), 2, " ");
 	assign.append(";\n");
+	input.append(";\n");
 	decx.append(";\n");
-	always.append("end\n");
-	declarations.insert(declarations.find("in);"), "X, ");
+	declarations.insert(declarations.find("in);"), "Z, ");
+	declarations.insert(declarations.find("parameter"), input);
 	declarations.insert(declarations.find("parameter"), decx);
 	declarations.insert(declarations.find("parameter"), assign);
-	declarations.insert(declarations.find("parameter"), always);
-	declarations.insert(declarations.find(assign), "output X;\n");
-	cerr << "Creating .v file......";
+	declarations.insert(declarations.find(assign), "output Z;\n");
+	if(verbose) cerr << "Creating .v file......";
 	ofstream fout("verilogs/cadb160.v");
 	fout << declarations;
 	fout << fsm;
-	fout << reset;
 	for(int i = 0; i < nMonitors; i++)
 	{
 		fout << vTriggers[i];
@@ -214,35 +275,36 @@ int main(int argc, char* argv[])
 	}
 	fout << "endmodule\n";
 	fout.close();
-	cout << "done." << endl;
+	if(verbose) cout << "done." << endl;
 
-	/*------------------Generate yosys script to synthesis all .v files------------------*/
-	fout.open("scripts/yosys.sh");
-	fout << "read_verilog verilogs/cadb160.v" << endl;
-	fout << "hierarchy; proc; fsm; techmap;" << endl;
-	fout << "write_blif blifs/cadb160.blif" << endl;
-	fout.close();
-
-	/*------------------Generate abc script to solve all .blif files------------------*/
-	fout.open("scripts/abcInt.sh");
-	fout << "read blifs/cadb160.blif" << endl;
-	fout << "strash" << endl;
-	fout << "int -L logs/cadb160.log" << endl;
-	fout.close();
+	/*------------------Generate script files------------------*/
+	createScript(Id, "yosys");
+	createScript(Id, "abcToBlif");
+	// createScript(Id, "abcInt");
+	createScript("0", "dc2");
 
 	/*------------------(.v) Yosys synthesis (.blif)------------------*/
-	cerr << "Creating .blif file (yosys)......";
+	if(verbose) cerr << "Creating .blif file (yosys)......";
 	system("./yosys -q -s scripts/yosys.sh");
-	cout << "done." << endl;
+	if(verbose) cout << "done." << endl;
+
+	/*------------------(.blif) Abc to blif (.blif)------------------*/
+	if(verbose) cerr << "Rewriting .blif files (abc)......";
+	system("./abc -f scripts/abcToBlif.sh > /dev/null");
+	if(verbose) cout << "done." << endl;
+
+	/*------------------Removing redundant latches------------------*/
+	// removeLatch("blifs/cadb160.blif");
 
 	/*------------------(.blif) Abc int cmd (.log)------------------*/
-	cerr << "Running \"int\" cmd (abc)......";
-	system("./abc -f scripts/abcInt.sh > /dev/null");
-	cout << "done." << endl;
+	if(verbose) cerr << "Running \"int\" cmd (abc)......";
+	if(!verbose) system("./abc -f scripts/dc2.sh > /dev/null");
+	else system("./abc -f scripts/dc2.sh");
+	if(verbose) cout << "done." << endl;
 
 	/*------------------(.log) Write the input sequence (input_sequence)------------------*/
 	vector<vector<bool> > inputSeq;
-	fout.open("outputs/input_sequence");
+	fout.open(argv[4]);
 	if(readLog("blifs/cadb160.blif", "logs/cadb160.log", inputSeq))
 	{
 		for(int i = 0; i < inputSeq.size(); i++)
@@ -254,11 +316,138 @@ int main(int argc, char* argv[])
 			fout << endl;
 		}
 		fout << endl;
-	} else fout << "outputs/input_sequence" << " is UNSAT." << endl;
+	}
 	fout.close();
 
 	for (vector<assertions*>::iterator i = vassertions.begin(); i != vassertions.end(); ++i)
 		delete *i;
 	
+	/*system("rm -f verilogs/*");
+	system("rm -f blifs/*");
+	system("rm -f logs/*");
+	system("rm -f outputs/*");
+	system("rm -f scripts/*");*/
+
 	return 0;
+}
+
+int createScript(string Id, string script)
+{
+	ofstream fout;
+
+	if(script == "yosys")
+	{
+		fout.open("scripts/yosys.sh");
+		if(Id != "-1") fout << "read_verilog verilogs/cadb160_asser" << Id << ".v" << endl;	
+		else fout << "read_verilog verilogs/cadb160.v" << endl;
+		fout << "proc; opt; techmap -map techlibs/techmap.v;" << endl;
+		if(Id != "-1") fout << "write_blif blifs/cadb160_asser" << Id << ".blif" << endl;
+		else fout << "write_blif blifs/cadb160.blif" << endl;		
+	}
+
+	else if(script == "abcToBlif")
+	{
+		fout.open("scripts/abcToBlif.sh");
+		if(Id != "-1") fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
+		else fout << "read blifs/cadb160.blif" << endl;
+		fout << "strash" << endl;
+		if(Id != "-1") fout << "write blifs/cadb160_asser" << Id << ".blif" << endl;
+		else fout << "write blifs/cadb160.blif" << endl;
+	}
+
+	else if(script == "abcPdr")
+	{
+		fout.open("scripts/abcPdr.sh");
+		if(Id != "-1") fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
+		else fout << "read blifs/cadb160.blif" << endl;
+		fout << "strash" << endl;
+		if(Id != "-1") fout << "pdr -L logs/cadb160_asser" << Id << ".log" << endl;
+		else fout << "pdr -L logs/cadb160_asser" << Id << ".log" << endl;
+	}
+
+	else if(script == "abcInt")
+	{
+		fout.open("scripts/abcInt.sh");
+		if(Id != "-1") fout << "read blifs/cadb160_asser" << Id << ".blif" << endl;
+		else fout << "read blifs/cadb160.blif" << endl;
+		fout << "strash" << endl;
+		if(Id != "-1" && !verbose) fout << "int -L logs/cadb160_asser" << Id << ".log" << endl;
+		else if(Id != "-1" && verbose) fout << "int -vL logs/cadb160_asser" << Id << ".log" << endl;
+		else if(Id == "-1" && !verbose) fout << "int -L logs/cadb160.log" << endl;
+		else  fout << "int -vL logs/cadb160.log" << endl;
+	}
+
+	else if (script == "dc2")
+	{
+		fout.open("scripts/dc2.sh");
+		fout << "read blifs/cadb160.blif" << endl;
+		fout << "strash" << endl;
+		for(int j = 0; j < 8; j++)
+		{
+			for(int i = 0; i < 10; i++)
+			{
+				fout << "dc2" << endl;
+			}
+			fout << "ifraig" << endl;
+		}
+		// if(!verbose) fout << "int -L logs/cadb160.log" << endl;
+		// else fout << "int -vL logs/cadb160.log" << endl;
+		if(!verbose) fout << "bmc3 -L logs/cadb160.log" << endl;
+		else fout << "bmc3 -vL logs/cadb160.log" << endl;
+	}
+
+	fout.close();
+	return 0;
+}
+
+string createFileName(string id, string type)
+{
+	string temp;
+	if(type == "verilog")
+	{
+		if(id == "0") temp = "verilogs/cadb160.v";
+		else
+		{
+			temp = "verilogs/cadb160_asser";
+			temp.append(id);
+			temp.append(".v");
+		}
+	}
+	else if(type == "blif")
+	{
+		if(id == "0") temp = "blifs/cadb160.blif";
+		else
+		{
+			temp = "blifs/cadb160_asser";
+			temp.append(id);
+			temp.append(".blif");
+		}
+	}
+	else if(type == "log")
+	{
+		if(id == "0") temp = "logs/cadb160.log";
+		else
+		{
+			temp = "logs/cadb160_asser";
+			temp.append(id);
+			temp.append(".log");
+		}
+	}
+	else if(type == "output")
+	{
+		if(id == "0") temp = "outputs/input_sequence";
+		else
+		{
+			temp = "outputs/input_sequence";
+			temp.append(id);
+		}
+	}
+	else
+	{
+		temp = "ProblemD.1/tb";
+		temp.append(id);
+		temp.append("/fsm.v");
+	}
+
+	return temp;
 }

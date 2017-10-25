@@ -7,11 +7,17 @@
 
 using namespace std;
 
-bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
+bool readLog(const char* cblifFile, const char* clogFile, vector<vector<bool> > &inputSeq)
 {
 	string line, word;
 	ifstream blifFile(cblifFile);
-	getline(blifFile, line);
+
+	if(!blifFile.is_open())
+	{
+		cout << "Cannot open " << cblifFile << ": No such file." << endl;
+		return 1;
+	}
+
 	getline(blifFile, line);
 	getline(blifFile, line);
 	getline(blifFile, line);
@@ -20,6 +26,13 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	int PPIs = 0;
 	while(token1 >> word)
 	{
+		if(word == "\\")
+		{
+			getline(blifFile, line);
+			token1.clear();
+			token1.str(line);
+			continue;		
+		}
 		if(word == ".inputs") continue;
 		if(word.find("in[") != string::npos) careBits.push_back(1);
 		else if(word.find("PPI") != string::npos)
@@ -32,6 +45,12 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	}
 
 	ifstream logFile(clogFile);
+	if(!logFile.is_open()) 
+	{
+		cout << "Cannot open " << clogFile << ": No such file." << endl;
+		return 1;
+	}
+	
 	int iFrame = 0;
 	stringstream ss;
 	getline(logFile, line);
@@ -51,9 +70,10 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	int inBit = total / (iFrame + 1);*/
 	int inBit = line.size();
 	vector<bool> vtmp;
-	for(int i = 0; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
+	vtmp.push_back(1);
+	for(int i = 1; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
 	inputSeq.push_back(vtmp);
-	for(int i = 0; i < iFrame; i++)
+	for(int i = 0; i < iFrame - 1; i++)
 	{
 		vector<bool> inputOne;
 		stack<bool> tempInput;

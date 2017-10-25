@@ -6,6 +6,7 @@
 
 using namespace std;
 
-void parse(char* file, string &fsm, string &declarations, vector<assertions*> &vassertions);
+int removeLatch(const char* file);
+bool parse(const char* file, string &fsm, string &declarations, vector<assertions*> &vassertions);
 
 #endif
