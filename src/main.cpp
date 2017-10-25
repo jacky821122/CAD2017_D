@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 	system("rm -f verilogs/*");
 	system("rm -f blifs/*");
 	system("rm -f logs/*");
-	system("rm -f outputs/*");
+	//system("rm -f outputs/*");
 	system("rm -f scripts/*");
 	if(!parse(fsmFileName.c_str(), fsm, declarations, vassertions)) return 1;
 	int nMonitors = 0;
@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
 			}
 			fout << endl;
 		}
-		fout << endl;
+	 //fout << endl;
 	}
 	fout.close();
 
