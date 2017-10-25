@@ -15,25 +15,16 @@ $(EXE): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 obj/%.o: src/%.cpp
-		$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 run1:
-	./main ProblemD0426/tb1/fsm.v cadb160.v 1
-
-run1m:
-	./main ProblemD0426/tb1/fsm.v cadb160_multiCounter.v 3
+	./main -i ProblemD0426/tb1/fsm.v -o outputs/input_sequence
 
 run2:
-	./main ProblemD0426/tb2/fsm.v cadb160.v 1
-
-run2m:
-	./main ProblemD0426/tb2/fsm.v cadb160_multiCounter.v 3
+	./main -i ProblemD0426/tb2/fsm.v -o outputs/input_sequence
 
 run3:
-	./main ProblemD0426/tb3/fsm.v cadb160.v 1
-
-run3m:
-	./main ProblemD0426/tb3/fsm.v cadb160.multiCounter.v 3
+	./main -i ProblemD0426/tb3/fsm.v -o outputs/input_sequence
 
 clean:
 	rm $(EXE) $(OBJS)

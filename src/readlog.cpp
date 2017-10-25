@@ -7,7 +7,7 @@
 
 using namespace std;
 
-bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
+bool readLog(const char* cblifFile, const char* clogFile, vector<vector<bool> > &inputSeq)
 {
 	string line, word;
 	ifstream blifFile(cblifFile);
@@ -73,7 +73,7 @@ bool readLog(char* cblifFile, char* clogFile, vector<vector<bool> > &inputSeq)
 	vtmp.push_back(1);
 	for(int i = 1; i < inBit - 2 - PPIs + 1 /* -clk -rst -PPI +rst */; i++) vtmp.push_back(0);
 	inputSeq.push_back(vtmp);
-	for(int i = 0; i < iFrame; i++)
+	for(int i = 0; i < iFrame - 1; i++)
 	{
 		vector<bool> inputOne;
 		stack<bool> tempInput;

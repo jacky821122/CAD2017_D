@@ -30,7 +30,7 @@ string counterGenerator(assertions asser, string &dec)
 	ss1 >> regBit;
 	ss2 << asser.delaySecond - 1;
 	ss2 >> second;
-	ss3 << asser.delayFirst - 1;
+	ss3 << asser.delayFirst;
 	ss3 >> first;
 	dec.insert(dec.find("parameter"), "reg [");
 	dec.insert(dec.find("parameter"), regBit);

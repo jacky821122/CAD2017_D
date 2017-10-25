@@ -3,6 +3,6 @@
 
 #include <vector>
 
-bool readLog(char* cblifFile, char* clogFile, std::vector<std::vector<bool> > &inputSeq);
+bool readLog(const char* cblifFile, const char* clogFile, std::vector<std::vector<bool> > &inputSeq);
 
 #endif
